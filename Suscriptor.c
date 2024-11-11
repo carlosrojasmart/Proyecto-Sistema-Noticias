@@ -5,70 +5,72 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <errno.h>
 
-//Funcion para recibir noticias desde el pipe
-void recibirNoticias(char *pipeNoticias, char *categorias) {
-    // Verificar si el pipe ya existe
-    if (access(pipeNoticias, F_OK) == -1) {
-        if (mkfifo(pipeNoticias, 0666) == -1) {
-            perror("Error al crear pipe de noticias");
-        }
+// Función para recibir noticias desde el pipe exclusivo
+void recibirNoticias(char *pipeName, char *categorias) {
+    if (access(pipeName, F_OK) == -1) {
+        perror("Error al acceder al pipe de noticias");
+        return;
     }
 
-    int fd = open(pipeNoticias, O_RDONLY);  // Abrir pipe para leer noticias
+    int fd = open(pipeName, O_RDONLY | O_NONBLOCK);
     if (fd == -1) {
         perror("Error al abrir pipe de noticias");
-        exit(1);
+        return;
     }
 
     char buffer[256];
-    while (1) {  // Bucle infinito para seguir leyendo noticias
-        memset(buffer, 0, sizeof(buffer));  // Limpiar buffer
-        int bytesRead = read(fd, buffer, sizeof(buffer) - 1);  // Leer del pipe
+    while (1) {
+        memset(buffer, 0, sizeof(buffer));
+        int bytesRead = read(fd, buffer, sizeof(buffer) - 1);
         if (bytesRead > 0) {
             buffer[bytesRead] = '\0';
-
-            // Procesar las noticias recibidas
             char *noticia = strtok(buffer, "\n");
             while (noticia != NULL) {
-                char categoriaNoticia = noticia[0];  // Filtrar por categorías
+                char categoriaNoticia = noticia[0];
                 if (strchr(categorias, categoriaNoticia)) {
                     printf("Noticia recibida por el suscriptor: %s\n", noticia);
                 }
                 noticia = strtok(NULL, "\n");
             }
+        } else if (bytesRead == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
+            perror("Error al leer del pipe de noticias");
+            break;
         }
+        
+        usleep(500000);
     }
 
-    close(fd);  // Cerrar el pipe al finalizar
+    close(fd);
 }
 
-
-void enviarSuscripcion(char *pipeSSC, char *categorias) {
-    // Verificar si el pipe ya existe
+// Función para enviar la suscripción y el nombre del pipe exclusivo
+void enviarSuscripcion(char *pipeSSC, char *categorias, char *pipeName) {
     if (access(pipeSSC, F_OK) == -1) {
         if (mkfifo(pipeSSC, 0666) == -1) {
             perror("Error al crear pipe de suscripción");
+            return;
         }
     }
 
-    int fd = open(pipeSSC, O_WRONLY);  // Abrir pipe para escribir
+    int fd = open(pipeSSC, O_WRONLY);
     if (fd == -1) {
         perror("Error al abrir pipe para enviar suscripción");
         exit(1);
     }
 
-    write(fd, categorias, strlen(categorias));  // Enviar categorías al sistema
-    close(fd);  // Cerrar pipe
+    char mensaje[256];
+    snprintf(mensaje, sizeof(mensaje), "%s:%s", categorias, pipeName);
+    write(fd, mensaje, strlen(mensaje));
+    close(fd);
 }
-
 
 int main(int argc, char *argv[]) {
     char *pipeSSC = NULL;
-    char *pipeNoticias = "pipeNoticias";  //Pipe para recibir noticias
+    char pipeName[20];
     char categorias[6] = {0};
 
-    //Procesar los argumentos para obtener el nombre del pipe de suscripción
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-s") == 0) {
             pipeSSC = argv[++i];
@@ -76,18 +78,23 @@ int main(int argc, char *argv[]) {
     }
 
     if (pipeSSC) {
+        snprintf(pipeName, sizeof(pipeName), "pipeNoticias%d", getpid());
+
+        if (mkfifo(pipeName, 0666) == -1) {
+            perror("Error al crear pipe exclusivo para noticias");
+            exit(1);
+        }
+
         printf("Ingrese las categorías a las que desea suscribirse (A, E, C, P, S): ");
         fgets(categorias, sizeof(categorias), stdin);
 
-        enviarSuscripcion(pipeSSC, categorias);  //Enviar suscripción
-        recibirNoticias(pipeNoticias, categorias);  //Recibir noticias
+        enviarSuscripcion(pipeSSC, categorias, pipeName);
+        recibirNoticias(pipeName, categorias);
     } else {
         fprintf(stderr, "Uso: suscriptor -s pipeSSC\n");
     }
 
     return 0;
 }
-
-
 
 
