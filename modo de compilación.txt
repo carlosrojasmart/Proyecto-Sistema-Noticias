@@ -1,0 +1,5 @@
+./sistema -p pipe_publicador -s pipe_suscriptor
+
+./suscriptor -s pipe_suscriptor -t A 
+
+./publicador -p pipe_publicador -f noticias.txt -t 2
