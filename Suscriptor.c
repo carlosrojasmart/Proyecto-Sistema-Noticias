@@ -1,3 +1,25 @@
+/*
+ * ──────────────────────────────────────────────────────────────────────────────
+ *  Proyecto : Sistema de Comunicación entre Publicador y Suscriptores
+ *  Fecha    : 11/11/2024
+ *  Materia  : Sistemas Operativos
+ *  Profesor : John Corredor Franco
+ * ──────────────────────────────────────────────────────────────────────────────
+ *  Descripción:
+ *    Implementa un suscriptor que se conecta a un sistema de noticias mediante
+ *    tuberías FIFO. Permite seleccionar categorías de noticias y recibir solo
+ *    aquellas que corresponden a las categorías seleccionadas. Finaliza cuando
+ *    recibe un mensaje de fin de emisión.
+ * ──────────────────────────────────────────────────────────────────────────────
+ *  Autores:
+ *    - Jocelyne González
+ *    - Laura Garzón
+ *    - Juan Diego Romero
+ *    - Carlos Rojas
+ * ──────────────────────────────────────────────────────────────────────────────
+ */
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

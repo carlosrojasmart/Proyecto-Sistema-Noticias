@@ -1,3 +1,24 @@
+/*
+ * ──────────────────────────────────────────────────────────────────────────────
+ *  Proyecto : Sistema de Comunicación entre Publicador y Suscriptores
+ *  Fecha    : 11/11/2024
+ *  Materia  : Sistemas Operativos
+ *  Profesor : John Corredor Franco
+ * ──────────────────────────────────────────────────────────────────────────────
+ *  Descripción:
+ *    Este programa actúa como un publicador de noticias, leyendo cada línea de un
+ *    archivo y enviándola a través de un pipe a los suscriptores. Incluye una pausa
+ *    entre envíos para controlar la frecuencia de publicación.
+ * ──────────────────────────────────────────────────────────────────────────────
+ *  Autores:
+ *    - Jocelyne González
+ *    - Laura Garzón
+ *    - Juan Diego Romero
+ *    - Carlos Rojas
+ * ──────────────────────────────────────────────────────────────────────────────
+ */
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
